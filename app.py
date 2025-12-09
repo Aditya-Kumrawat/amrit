@@ -98,6 +98,11 @@ def identify_faces_task(faces_data, result_queue):
             # Convert to RGB
             face_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
             
+            global DeepFace
+            if DeepFace is None:
+                from deepface import DeepFace
+            
+            # DeepFace Search
             dfs = DeepFace.find(
                 img_path=face_rgb, 
                 db_path=KNOWN_DB_DIR, 
