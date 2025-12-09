@@ -4,6 +4,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import streamlit as st
 import cv2
+cv2.setNumThreads(0)
 import numpy as np
 import av
 import threading
