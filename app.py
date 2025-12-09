@@ -1,16 +1,21 @@
-import os
-# Suppress TensorFlow logs
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 import streamlit as st
+print("DEBUG: Streamlit imported")
 import cv2
 cv2.setNumThreads(0)
+print("DEBUG: CV2 imported")
 import numpy as np
 import av
 import threading
 import time
-from ultralytics import YOLO
-from deepface import DeepFace
+print("DEBUG: Standard libs imported")
+
+# Delayed imports to avoid startup crash / race conditions
+YOLO = None
+DeepFace = None
+
+# ==========================================
+# Configuration
+# ==========================================
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 import queue
@@ -36,15 +41,34 @@ COOLDOWN_SECONDS = 5
 # ==========================================
 @st.cache_resource
 def load_models():
+    global YOLO, DeepFace
+    print("DEBUG: Loading heavy modules...")
+    if YOLO is None:
+        from ultralytics import YOLO
+        print("DEBUG: YOLO module imported")
+    if DeepFace is None:
+        from deepface import DeepFace
+        print("DEBUG: DeepFace module imported")
+
     # Check for custom weights, else fallback to root/default
     if os.path.exists(FACE_MODEL_PATH):
+        print(f"DEBUG: Loading Face Model from {FACE_MODEL_PATH}")
         face = YOLO(FACE_MODEL_PATH)
     elif os.path.exists('yolov8n.pt'):
+        print("DEBUG: Loading Face Model from yolov8n.pt")
         face = YOLO('yolov8n.pt') 
     else:
+        print("DEBUG: Downloading Face Model yolov8n.pt")
         face = YOLO('yolov8n.pt') # Will download if missing
         
-    hand = YOLO(HAND_MODEL_PATH) if os.path.exists(HAND_MODEL_PATH) else YOLO('yolov8n.pt') # Fallback if hand model missing
+    if os.path.exists(HAND_MODEL_PATH):
+        print(f"DEBUG: Loading Hand Model from {HAND_MODEL_PATH}")
+        hand = YOLO(HAND_MODEL_PATH)
+    else:
+        print("DEBUG: Loading Hand Model (Fallback to yolov8n)")
+        hand = YOLO('yolov8n.pt') 
+
+    print("DEBUG: Models loaded successfully")
     return face, hand
 
 try:
